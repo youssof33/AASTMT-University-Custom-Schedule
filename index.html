@@ -81,19 +81,53 @@
     .color-option { width: 25px; height: 25px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
     .color-option.selected { border-color: #2c3e50; }
     
-    /* Generation Mode Selector */
-    .mode-selector { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
-    .mode-option { display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px; cursor: pointer; border: 2px solid #ddd; transition: all 0.3s; }
-    .mode-option:hover { border-color: #3498db; }
-    .mode-option.selected { border-color: #2ecc71; background: #e8f8f0; }
-    .mode-radio { margin-right: 10px; }
-    .mode-desc { font-size: 14px; color: #7f8c8d; margin-top: 5px; }
-    
-    /* Filter Status */
-    .filter-status { margin-top: 10px; padding: 10px; background: #e8f4fc; border-radius: 5px; font-size: 14px; }
-    
-    /* Sort Indicator */
-    .sort-indicator { display: inline-block; margin-left: 10px; font-size: 12px; color: #3498db; }
+    /* NEW: Generation Options Styles */
+    .generation-options { 
+      background: #f8f9fa; 
+      border-radius: 8px; 
+      padding: 20px; 
+      margin: 20px 0; 
+      border: 2px solid #e0e0e0;
+    }
+    .option-group { 
+      margin: 15px 0; 
+      padding: 15px; 
+      background: white; 
+      border-radius: 6px; 
+      border-left: 4px solid #3498db;
+    }
+    .option-group h4 { 
+      margin: 0 0 10px 0; 
+      color: #2c3e50;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .option-checkbox { 
+      margin-right: 10px; 
+      transform: scale(1.2);
+      accent-color: #3498db;
+    }
+    .option-description { 
+      margin: 5px 0 0 25px; 
+      color: #7f8c8d; 
+      font-size: 14px;
+    }
+    .generation-info {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+    .generation-info .selected-count {
+      background: #3498db;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-weight: bold;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
@@ -263,10 +297,7 @@
   <h2>3) Doctor / TA Preferences</h2>
   <div style="margin-bottom: 15px; padding: 10px; background: #e8f4fc; border-radius: 5px;">
     <p style="margin: 0; font-size: 14px; color: #2c3e50;">
-      <strong>Note:</strong> 
-      <br>1. Check the subjects you will take this semester. Unchecked subjects will be excluded.
-      <br>2. When you select a doctor for a lecture, only compatible TAs from the same group will be available.
-      <br>3. You cannot mix groups for the same subject - all classes for a subject must come from the same group.
+      <strong>Note:</strong> Check the subjects you will take this semester. Unchecked subjects will be excluded from schedule generation.
     </p>
   </div>
   <div id="preferences"></div>
@@ -276,45 +307,41 @@
 <div class="box">
   <h2>4) Generate Schedule</h2>
   
-  <div class="mode-selector">
-    <label class="mode-option" id="modeAll">
-      <input type="radio" name="generationMode" value="all" class="mode-radio" checked>
-      <div>
-        <strong>All Custom Schedules</strong>
-        <div class="mode-desc">Generate all possible schedule combinations that match your preferences</div>
-      </div>
-    </label>
+  <!-- NEW: Generation Options -->
+  <div class="generation-options">
+    <div class="generation-info">
+      <span class="selected-count" id="selectedSubjectsCount">0 subjects selected</span>
+      <span style="color: #7f8c8d; font-size: 14px;">Choose your preferred schedule criteria:</span>
+    </div>
     
-    <label class="mode-option" id="modeSorted">
-      <input type="radio" name="generationMode" value="sorted" class="mode-radio">
-      <div>
-        <strong>Smart Sorted Schedules</strong>
-        <div class="mode-desc">Sort all schedules by: 1) Least gaps, 2) Least days, 3) Earliest finish</div>
-      </div>
-    </label>
+    <div class="option-group">
+      <h4><input type="checkbox" id="optionMinDays" class="option-checkbox" checked> 
+      <span style="color: #27ae60;">🏫 Minimum Days Schedule</span></h4>
+      <p class="option-description">Generates schedules that require the fewest number of days at university (maximize days off).</p>
+    </div>
     
-    <label class="mode-option" id="modeOptimized">
-      <input type="radio" name="generationMode" value="optimized" class="mode-radio">
-      <div>
-        <strong>Top 10 Optimized</strong>
-        <div class="mode-desc">Show only top 10 schedules with fewest gaps and fewest days</div>
-      </div>
-    </label>
+    <div class="option-group">
+      <h4><input type="checkbox" id="optionMinGaps" class="option-checkbox"> 
+      <span style="color: #e67e22;">⏰ Minimal Gaps Schedule</span></h4>
+      <p class="option-description">Generates schedules with the least gaps between classes (ignoring the 30-minute breaks between lectures).</p>
+    </div>
     
-    <label class="mode-option" id="modeEarly">
-      <input type="radio" name="generationMode" value="early" class="mode-radio">
-      <div>
-        <strong>Early Finish (End by 4:30 PM)</strong>
-        <div class="mode-desc">Only show schedules where all classes end by 4:30 PM (if available)</div>
-      </div>
-    </label>
+    <div class="option-group">
+      <h4><input type="checkbox" id="optionBalanced" class="option-checkbox"> 
+      <span style="color: #9b59b6;">⚖️ Balanced Schedule</span></h4>
+      <p class="option-description">Generates schedules that balance between minimum days and minimal gaps.</p>
+    </div>
+    
+    <div class="option-group">
+      <h4><input type="checkbox" id="optionAll" class="option-checkbox"> 
+      <span style="color: #3498db;">📊 Show All Possible Schedules</span></h4>
+      <p class="option-description">Shows all valid schedule combinations (can be many).</p>
+    </div>
   </div>
   
-  <button onclick="generateSchedules()" style="padding: 12px 25px; font-size: 16px; width: 100%;">Generate Schedules</button>
-  
-  <div id="filterStatus" class="filter-status" style="display: none;">
-    <!-- Filter status will be shown here -->
-  </div>
+  <button onclick="generateSchedules()" style="padding: 12px 25px; font-size: 16px; width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    🚀 Generate Selected Schedules
+  </button>
   
   <div id="results" style="margin-top: 30px;">
     <div id="scheduleResults"></div>
@@ -326,7 +353,6 @@ let subjects = [];
 let groups = [];
 let currentEditingGroup = null;
 let allSchedules = [];
-let subjectPacks = {};
 
 // Better color palette - easy on eyes with good contrast
 const colorPalette = [
@@ -334,7 +360,7 @@ const colorPalette = [
   { name: "Green", light: '#D5F4E6', dark: '#2ECC71' },
   { name: "Purple", light: '#E8DAEF', dark: '#9B59B6' },
   { name: "Orange", light: '#FDEBD0', dark: '#E67E22' },
-  { name: "Red", light: '#FADBD8', dark: '#E74c3C' },
+  { name: "Red", light: '#FADBD8', dark: '#E74C3C' },
   { name: "Teal", light: '#D1F2EB', dark: '#1ABC9C' },
   { name: "Navy", light: '#D6DBDF', dark: '#2C3E50' },
   { name: "Pink", light: '#FAD7E0', dark: '#F06292' },
@@ -363,9 +389,11 @@ let currentEditingGroupIndex = null;
 function convertOldFormatToNew(data) {
   console.log("Converting old format to new format...");
   
+  // Check if subjects are strings (old format)
   if (data.subjects && data.subjects.length > 0 && typeof data.subjects[0] === 'string') {
     console.log("Detected old format: subjects as strings");
     
+    // Convert subjects array of strings to array of objects
     data.subjects = data.subjects.map((subjectName, index) => {
       const colorIndex = index % colorPalette.length;
       return {
@@ -376,11 +404,14 @@ function convertOldFormatToNew(data) {
     });
   }
   
+  // Make sure groups have proper structure
   if (data.groups && data.groups.length > 0) {
     data.groups.forEach(group => {
+      // Ensure group has id and name
       if (!group.id) group.id = groups.length + 1;
       if (!group.name) group.name = `Group ${group.id}`;
       
+      // Ensure each class has groupName
       if (group.classes && group.classes.length > 0) {
         group.classes.forEach(cls => {
           if (!cls.groupName) {
@@ -391,6 +422,7 @@ function convertOldFormatToNew(data) {
     });
   }
   
+  // Ensure preferences have selected property
   if (data.preferences) {
     for (const subjectName in data.preferences) {
       if (typeof data.preferences[subjectName] === 'object') {
@@ -437,6 +469,7 @@ function loadFromBrowser() {
     if (saved) {
       const data = JSON.parse(saved);
       
+      // Check if data needs conversion from old format
       let processedData = data;
       if (!data.version || data.version === '1.0') {
         processedData = convertOldFormatToNew(data);
@@ -445,6 +478,7 @@ function loadFromBrowser() {
       subjects = processedData.subjects || [];
       groups = processedData.groups || [];
       
+      // Make sure all classes have groupName property
       groups.forEach(group => {
         group.classes.forEach(cls => {
           if (!cls.groupName) {
@@ -453,6 +487,7 @@ function loadFromBrowser() {
         });
       });
       
+      // Ensure all subjects have the new structure
       subjects.forEach((subject, index) => {
         if (typeof subject === 'string') {
           const colorIndex = index % colorPalette.length;
@@ -468,7 +503,9 @@ function loadFromBrowser() {
       updateClassSubjectDropdown();
       updateGroupSelector();
       renderPreferences();
+      updateSelectedCount();
       
+      // Load preferences after rendering
       if (processedData.preferences) {
         setTimeout(() => loadPreferences(processedData.preferences), 100);
       }
@@ -513,11 +550,13 @@ function loadPreferences(preferences) {
     if (labElem) labElem.value = preferences[subjectName].Lab || 'Any';
     if (checkboxElem) checkboxElem.checked = preferences[subjectName].selected !== false;
     
+    // Update subject selected status
     const subject = subjects.find(s => s.name === subjectName);
     if (subject && preferences[subjectName].selected !== undefined) {
       subject.selected = preferences[subjectName].selected;
     }
   }
+  updateSelectedCount();
 }
 
 function exportData() {
@@ -559,6 +598,7 @@ function importData(event) {
         throw new Error('Invalid file format: No subjects found');
       }
       
+      // Convert old format to new format if needed
       let processedData = data;
       if (!data.version || data.version === '1.0') {
         processedData = convertOldFormatToNew(data);
@@ -568,6 +608,7 @@ function importData(event) {
       subjects = processedData.subjects || [];
       groups = processedData.groups || [];
       
+      // Ensure all subjects have the new structure
       subjects.forEach((subject, index) => {
         if (typeof subject === 'string') {
           const colorIndex = index % colorPalette.length;
@@ -579,6 +620,7 @@ function importData(event) {
         }
       });
       
+      // Make sure all classes have groupName
       groups.forEach(group => {
         if (!group.classes) group.classes = [];
         group.classes.forEach(cls => {
@@ -588,13 +630,16 @@ function importData(event) {
         });
       });
       
+      // Reset file input
       event.target.value = '';
       
       renderSubjects();
       updateClassSubjectDropdown();
       updateGroupSelector();
       renderPreferences();
+      updateSelectedCount();
       
+      // Load preferences after rendering
       if (processedData.preferences) {
         setTimeout(() => loadPreferences(processedData.preferences), 100);
       }
@@ -603,6 +648,7 @@ function importData(event) {
         renderScheduleTable(currentEditingGroup);
       }
       
+      // Auto-save the converted data
       setTimeout(() => saveToBrowser(), 500);
       
       showNotification('📥 Data imported successfully!');
@@ -623,28 +669,33 @@ function resetAll() {
   groups = [];
   currentEditingGroup = null;
   allSchedules = [];
-  subjectPacks = {};
   
+  // Clear local storage
   localStorage.removeItem('universityScheduleData');
   
+  // Clear UI
   renderSubjects();
   updateClassSubjectDropdown();
   updateGroupSelector();
   renderPreferences();
+  updateSelectedCount();
   
+  // Hide schedule editor
   document.getElementById('currentGroupInfo').style.display = 'none';
   document.getElementById('groupScheduleEditor').style.display = 'none';
   
+  // Clear results
   document.getElementById('scheduleResults').innerHTML = '';
   document.getElementById('results').innerHTML = '<div id="scheduleResults"></div>';
   
+  // Clear form fields
   document.getElementById('subjectName').value = '';
   document.getElementById('className').value = '';
-  document.getElementById('filterStatus').style.display = 'none';
   
   showNotification('🔄 All data has been reset');
 }
 
+// Auto-save when making changes
 function autoSave() {
   if (localStorage.getItem('universityScheduleData')) {
     saveToBrowser();
@@ -658,6 +709,7 @@ function getSubjectColor(subjectName) {
     return subject.color;
   }
   
+  // Default color if not found
   const index = subjects.findIndex(s => s.name === subjectName) % colorPalette.length;
   return colorPalette[index] || colorPalette[0];
 }
@@ -686,6 +738,7 @@ function addSubject() {
   renderSubjects();
   updateClassSubjectDropdown();
   renderPreferences();
+  updateSelectedCount();
   autoSave();
 }
 
@@ -739,6 +792,7 @@ function saveSubjectChanges() {
     return;
   }
   
+  // Check if new name already exists (excluding the current subject)
   if (newName !== currentEditingSubject && subjects.some(s => s.name === newName)) {
     alert("Subject name already exists");
     return;
@@ -748,8 +802,10 @@ function saveSubjectChanges() {
   const colorIndex = Array.from(document.querySelectorAll('.color-option')).indexOf(selectedColorOption);
   const newColor = colorPalette[colorIndex] || colorPalette[0];
   
+  // Update subject
   const subjectIndex = subjects.findIndex(s => s.name === currentEditingSubject);
   if (subjectIndex !== -1) {
+    // Update all classes with the old subject name
     groups.forEach(group => {
       group.classes.forEach(cls => {
         if (cls.subject === currentEditingSubject) {
@@ -758,6 +814,7 @@ function saveSubjectChanges() {
       });
     });
     
+    // Update subject itself
     subjects[subjectIndex] = {
       name: newName,
       color: newColor,
@@ -769,6 +826,7 @@ function saveSubjectChanges() {
   renderSubjects();
   updateClassSubjectDropdown();
   renderPreferences();
+  updateSelectedCount();
   if (currentEditingGroup) {
     renderScheduleTable(currentEditingGroup);
   }
@@ -791,6 +849,7 @@ function removeSubject(subjectName) {
   renderSubjects();
   updateClassSubjectDropdown();
   renderPreferences();
+  updateSelectedCount();
   if (currentEditingGroup) {
     renderScheduleTable(currentEditingGroup);
   }
@@ -900,6 +959,7 @@ function saveGroupChanges() {
     return;
   }
   
+  // Check if new name already exists (excluding current group)
   if (newName !== currentEditingGroup.name && groups.some(g => g.name === newName)) {
     alert("Group name already exists");
     return;
@@ -908,6 +968,7 @@ function saveGroupChanges() {
   const oldName = currentEditingGroup.name;
   currentEditingGroup.name = newName;
   
+  // Update all classes in this group
   currentEditingGroup.classes.forEach(cls => {
     cls.groupName = newName;
   });
@@ -942,6 +1003,7 @@ function deleteCurrentGroup() {
   document.getElementById('currentGroupInfo').style.display = 'none';
   document.getElementById('groupScheduleEditor').style.display = 'none';
   renderPreferences();
+  updateSelectedCount();
   autoSave();
   showNotification('✅ Group deleted!');
 }
@@ -976,6 +1038,7 @@ function addClassToGroup() {
   const startTime = timeData.start * 60;
   const endTime = timeData.end * 60;
   
+  // Check for time conflicts
   const conflict = currentEditingGroup.classes.find(c => 
     c.day === day && 
     c.timeSlot === timeSlot
@@ -999,10 +1062,12 @@ function addClassToGroup() {
     groupName: currentEditingGroup.name
   });
   
+  // Clear form
   document.getElementById('className').value = '';
   
   renderScheduleTable(currentEditingGroup);
   renderPreferences();
+  updateSelectedCount();
   autoSave();
 }
 
@@ -1015,6 +1080,7 @@ function removeClassFromGroup(day, timeSlot) {
   
   renderScheduleTable(currentEditingGroup);
   renderPreferences();
+  updateSelectedCount();
   autoSave();
 }
 
@@ -1076,11 +1142,13 @@ function saveInstructorName() {
     if (classItem) {
       classItem.name = newName;
       
+      // If we're currently editing this group, update the table
       if (currentEditingGroup && currentEditingGroup.id === group.id) {
         renderScheduleTable(currentEditingGroup);
       }
       
       renderPreferences();
+      updateSelectedCount();
       autoSave();
       closeEditModal();
       showNotification('✅ Instructor name updated!');
@@ -1092,19 +1160,23 @@ function renderScheduleTable(group) {
   const tbody = document.getElementById('scheduleGrid');
   tbody.innerHTML = '';
   
+  // Create rows for each day
   days.forEach(day => {
     const row = document.createElement('tr');
     
+    // Day cell - first column
     const dayCell = document.createElement('td');
     dayCell.className = 'day-header';
     dayCell.textContent = day;
     dayCell.style.fontWeight = '600';
     row.appendChild(dayCell);
     
+    // Create cells for each lecture slot (6 columns)
     for (let timeIndex = 0; timeIndex < 6; timeIndex++) {
       const cell = document.createElement('td');
       cell.className = 'empty-cell';
       
+      // Find class for this day and time slot
       const classItem = group.classes.find(c => 
         c.day === day && c.timeSlot === timeIndex
       );
@@ -1142,160 +1214,6 @@ function renderScheduleTable(group) {
   });
 }
 
-/******** PACK MANAGEMENT - NEW FUNCTIONS ********/
-function buildSubjectPacks() {
-  subjectPacks = {};
-  
-  subjects.forEach(subject => {
-    if (!subject.selected) return;
-    
-    subjectPacks[subject.name] = [];
-    
-    // For each group, check if it has all required classes for this subject
-    groups.forEach(group => {
-      const groupClasses = group.classes.filter(c => c.subject === subject.name);
-      
-      if (groupClasses.length > 0) {
-        // Organize classes by type
-        const lectures = groupClasses.filter(c => c.type === 'Lecture');
-        const sections = groupClasses.filter(c => c.type === 'Section');
-        const labs = groupClasses.filter(c => c.type === 'Lab');
-        
-        // Create packs from combinations
-        lectures.forEach(lecture => {
-          sections.forEach(section => {
-            labs.forEach(lab => {
-              subjectPacks[subject.name].push({
-                group: group.name,
-                classes: [lecture, section, lab]
-              });
-            });
-            
-            // If no labs, just add lecture + section
-            if (labs.length === 0) {
-              subjectPacks[subject.name].push({
-                group: group.name,
-                classes: [lecture, section]
-              });
-            }
-          });
-          
-          // If no sections, just add lecture
-          if (sections.length === 0) {
-            subjectPacks[subject.name].push({
-              group: group.name,
-              classes: [lecture]
-            });
-          }
-        });
-      }
-    });
-  });
-}
-
-function getCompatibleTAs(subjectName, selectedDoctor) {
-  if (!selectedDoctor || selectedDoctor === 'Any') {
-    return { sections: [], labs: [] };
-  }
-  
-  const sections = new Set();
-  const labs = new Set();
-  
-  groups.forEach(group => {
-    const groupClasses = group.classes.filter(c => c.subject === subjectName);
-    
-    // Check if this group has the selected doctor for lecture
-    const hasDoctor = groupClasses.some(c => 
-      c.type === 'Lecture' && c.name === selectedDoctor
-    );
-    
-    if (hasDoctor) {
-      // Add all TAs from this group
-      groupClasses.forEach(c => {
-        if (c.type === 'Section' && c.name) sections.add(c.name);
-        if (c.type === 'Lab' && c.name) labs.add(c.name);
-      });
-    }
-  });
-  
-  return {
-    sections: Array.from(sections),
-    labs: Array.from(labs)
-  };
-}
-
-function updateTADropdowns(subjectName, selectedDoctor) {
-  const compatibleTAs = getCompatibleTAs(subjectName, selectedDoctor);
-  const sectionSelect = document.getElementById(`pref_${subjectName}_Section`);
-  const labSelect = document.getElementById(`pref_${subjectName}_Lab`);
-  
-  if (sectionSelect) {
-    const currentSectionValue = sectionSelect.value;
-    sectionSelect.innerHTML = '<option value="Any">Any TA</option>';
-    
-    if (selectedDoctor === 'Any') {
-      // Show all sections
-      const allSections = new Set();
-      groups.forEach(group => {
-        group.classes.filter(c => c.subject === subjectName && c.type === 'Section' && c.name)
-          .forEach(c => allSections.add(c.name));
-      });
-      allSections.forEach(ta => {
-        sectionSelect.innerHTML += `<option value="${ta}">TA ${ta}</option>`;
-      });
-    } else {
-      // Show only compatible sections
-      compatibleTAs.sections.forEach(ta => {
-        sectionSelect.innerHTML += `<option value="${ta}">TA ${ta}</option>`;
-      });
-      
-      // If current value is not compatible, reset to "Any"
-      if (currentSectionValue !== 'Any' && !compatibleTAs.sections.includes(currentSectionValue)) {
-        sectionSelect.value = 'Any';
-      }
-    }
-    
-    // Try to restore previous value if still valid
-    if (compatibleTAs.sections.includes(currentSectionValue)) {
-      sectionSelect.value = currentSectionValue;
-    }
-  }
-  
-  if (labSelect) {
-    const currentLabValue = labSelect.value;
-    labSelect.innerHTML = '<option value="Any">Any TA</option>';
-    
-    if (selectedDoctor === 'Any') {
-      // Show all labs
-      const allLabs = new Set();
-      groups.forEach(group => {
-        group.classes.filter(c => c.subject === subjectName && c.type === 'Lab' && c.name)
-          .forEach(c => allLabs.add(c.name));
-      });
-      allLabs.forEach(ta => {
-        labSelect.innerHTML += `<option value="${ta}">TA ${ta}</option>`;
-      });
-    } else {
-      // Show only compatible labs
-      compatibleTAs.labs.forEach(ta => {
-        labSelect.innerHTML += `<option value="${ta}">TA ${ta}</option>`;
-      });
-      
-      // If current value is not compatible, reset to "Any"
-      if (currentLabValue !== 'Any' && !compatibleTAs.labs.includes(currentLabValue)) {
-        labSelect.value = 'Any';
-      }
-    }
-    
-    // Try to restore previous value if still valid
-    if (compatibleTAs.labs.includes(currentLabValue)) {
-      labSelect.value = currentLabValue;
-    }
-  }
-  
-  autoSave();
-}
-
 /******** PREFERENCES ********/
 function renderPreferences() {
   const div = document.getElementById('preferences');
@@ -1307,6 +1225,23 @@ function renderPreferences() {
   }
   
   subjects.forEach(subject => {
+    // Collect names separately by type for this subject
+    const lectureNames = new Set();
+    const sectionNames = new Set();
+    const labNames = new Set();
+    
+    groups.forEach(g => {
+      g.classes.filter(c => c.subject === subject.name && c.name && c.name.trim() !== '').forEach(c => {
+        if (c.type === 'Lecture') {
+          lectureNames.add(c.name);
+        } else if (c.type === 'Section') {
+          sectionNames.add(c.name);
+        } else if (c.type === 'Lab') {
+          labNames.add(c.name);
+        }
+      });
+    });
+    
     const color = subject.color;
     
     const prefBox = document.createElement('div');
@@ -1330,61 +1265,58 @@ function renderPreferences() {
       <div class="pref-type-container">
         <div class="pref-type">
           <label>Preferred Lecture Doctor:</label>
-          <select id="pref_${subject.name}_Lecture" style="width:100%" 
-                  onchange="updateTADropdowns('${subject.name}', this.value)">
+          <select id="pref_${subject.name}_Lecture" style="width:100%" onchange="autoSave()">
             <option value="Any">Any doctor</option>
+            ${Array.from(lectureNames).map(n => `<option value="${n}">Dr. ${n}</option>`).join('')}
           </select>
+          <div style="font-size:11px; color:#7f8c8d; margin-top:5px;">
+            ${lectureNames.size} doctor${lectureNames.size !== 1 ? 's' : ''} available
+          </div>
         </div>
         <div class="pref-type">
           <label>Preferred Section TA:</label>
           <select id="pref_${subject.name}_Section" style="width:100%" onchange="autoSave()">
             <option value="Any">Any TA</option>
+            ${Array.from(sectionNames).map(n => `<option value="${n}">TA ${n}</option>`).join('')}
           </select>
+          <div style="font-size:11px; color:#7f8c8d; margin-top:5px;">
+            ${sectionNames.size} TA${sectionNames.size !== 1 ? 's' : ''} available
+          </div>
         </div>
         <div class="pref-type">
           <label>Preferred Lab TA:</label>
           <select id="pref_${subject.name}_Lab" style="width:100%" onchange="autoSave()">
             <option value="Any">Any TA</option>
+            ${Array.from(labNames).map(n => `<option value="${n}">TA ${n}</option>`).join('')}
           </select>
+          <div style="font-size:11px; color:#7f8c8d; margin-top:5px;">
+            ${labNames.size} TA${labNames.size !== 1 ? 's' : ''} available
+          </div>
         </div>
       </div>
     `;
     div.appendChild(prefBox);
   });
-  
-  // Now populate the dropdowns
-  subjects.forEach(subject => {
-    const lectureSelect = document.getElementById(`pref_${subject.name}_Lecture`);
-    const sectionSelect = document.getElementById(`pref_${subject.name}_Section`);
-    const labSelect = document.getElementById(`pref_${subject.name}_Lab`);
-    
-    if (lectureSelect) {
-      const lectureDoctors = new Set();
-      groups.forEach(group => {
-        group.classes.filter(c => c.subject === subject.name && c.type === 'Lecture' && c.name)
-          .forEach(c => lectureDoctors.add(c.name));
-      });
-      
-      lectureDoctors.forEach(doctor => {
-        lectureSelect.innerHTML += `<option value="${doctor}">Dr. ${doctor}</option>`;
-      });
-    }
-    
-    // Initial population of TA dropdowns
-    updateTADropdowns(subject.name, 'Any');
-  });
 }
 
 function updateSubjectSelection(subjectName) {
-  const checkbox = document.getElementById(`check_${subject.name}`);
+  const checkbox = document.getElementById(`check_${subjectName}`);
   const subject = subjects.find(s => s.name === subjectName);
   if (subject) {
     subject.selected = checkbox.checked;
+    updateSelectedCount();
     autoSave();
   }
 }
 
-/******** SCHEDULE GENERATION WITH NEW FEATURES ********/
+function updateSelectedCount() {
+  const selectedCount = subjects.filter(s => s.selected !== false).length;
+  const totalCount = subjects.length;
+  document.getElementById('selectedSubjectsCount').textContent = 
+    `${selectedCount} of ${totalCount} subjects selected`;
+}
+
+/******** SCHEDULE GENERATION ********/
 function toMin(t) { 
   if (!t) return 0; 
   if (typeof t === 'number') return t;
@@ -1404,49 +1336,72 @@ function clash(a, b) {
   return a.day === b.day && !(a.end <= b.start || b.end <= a.start); 
 }
 
-function calculateScheduleScore(schedule) {
-  // Calculate gaps and days for optimization
-  let totalGaps = 0;
-  const daysWithClasses = new Set();
-  let maxEndTime = 0;
+// NEW: Calculate gaps between classes (ignoring 30-minute breaks)
+function calculateGaps(schedule) {
+  let totalGap = 0;
+  const classesByDay = {};
   
   // Group classes by day
-  const classesByDay = {};
-  days.forEach(day => classesByDay[day] = []);
-  
   schedule.forEach(cls => {
+    if (!classesByDay[cls.day]) {
+      classesByDay[cls.day] = [];
+    }
     classesByDay[cls.day].push(cls);
-    daysWithClasses.add(cls.day);
-    maxEndTime = Math.max(maxEndTime, cls.end);
   });
   
   // Calculate gaps for each day
-  Object.values(classesByDay).forEach(dayClasses => {
-    if (dayClasses.length > 1) {
-      // Sort by start time
-      dayClasses.sort((a, b) => a.start - b.start);
+  for (const day in classesByDay) {
+    const dayClasses = classesByDay[day].sort((a, b) => a.start - b.start);
+    
+    for (let i = 0; i < dayClasses.length - 1; i++) {
+      const current = dayClasses[i];
+      const next = dayClasses[i + 1];
+      const gap = next.start - current.end;
       
-      // Calculate gaps between consecutive classes
-      for (let i = 0; i < dayClasses.length - 1; i++) {
-        const gap = dayClasses[i + 1].start - dayClasses[i].end;
-        if (gap > 0) {
-          totalGaps += gap;
-        }
+      // Only count gaps that are more than 30 minutes (ignore the 30-minute breaks)
+      if (gap > 30) {
+        totalGap += (gap - 30); // Subtract the 30-minute break
       }
     }
-  });
+  }
   
-  return {
-    totalGaps,
-    daysCount: daysWithClasses.size,
-    maxEndTime,
-    formattedGaps: (totalGaps / 60).toFixed(1) + ' hours',
-    formattedEndTime: fromMin(maxEndTime)
-  };
+  return totalGap;
+}
+
+// NEW: Calculate number of days with classes
+function calculateDaysCount(schedule) {
+  const uniqueDays = new Set();
+  schedule.forEach(cls => uniqueDays.add(cls.day));
+  return uniqueDays.size;
+}
+
+// NEW: Calculate balanced score (combination of days and gaps)
+function calculateBalancedScore(schedule, maxDays, maxGaps) {
+  const daysCount = calculateDaysCount(schedule);
+  const gapsCount = calculateGaps(schedule);
+  
+  // Normalize both metrics to 0-100 scale
+  const daysScore = (1 - (daysCount / maxDays)) * 100;
+  const gapsScore = (1 - (gapsCount / maxGaps)) * 100;
+  
+  // Return weighted average (50% days, 50% gaps)
+  return (daysScore * 0.5) + (gapsScore * 0.5);
 }
 
 function generateSchedules() {
-  // Get selected subjects
+  // Get selected generation options
+  const optionMinDays = document.getElementById('optionMinDays').checked;
+  const optionMinGaps = document.getElementById('optionMinGaps').checked;
+  const optionBalanced = document.getElementById('optionBalanced').checked;
+  const optionAll = document.getElementById('optionAll').checked;
+  
+  // Check if at least one option is selected
+  if (!optionMinDays && !optionMinGaps && !optionBalanced && !optionAll) {
+    alert("Please select at least one schedule generation option.");
+    return;
+  }
+  
+  // Get only selected subjects
   const selectedSubjects = subjects.filter(s => s.selected !== false).map(s => s.name);
   
   if (selectedSubjects.length === 0) {
@@ -1459,74 +1414,65 @@ function generateSchedules() {
     return;
   }
   
-  // Get generation mode
-  const mode = document.querySelector('input[name="generationMode"]:checked').value;
-  const filterStatus = document.getElementById('filterStatus');
-  filterStatus.style.display = 'block';
+  // Collect all possible class combinations per selected subject
+  let options = {};
+  selectedSubjects.forEach(s => options[s] = []);
   
-  // Build subject packs
-  buildSubjectPacks();
-  
-  // Filter packs based on preferences
-  let validPacks = {};
-  
-  selectedSubjects.forEach(subject => {
-    validPacks[subject] = [];
-    
-    if (subjectPacks[subject]) {
-      subjectPacks[subject].forEach(pack => {
-        let valid = true;
-        
-        // Check each class in pack against preferences
-        pack.classes.forEach(cls => {
-          const prefSelect = document.getElementById(`pref_${subject}_${cls.type}`);
-          const prefValue = prefSelect ? prefSelect.value : 'Any';
-          
-          if (prefValue !== 'Any' && cls.name !== prefValue) {
-            valid = false;
-          }
-        });
-        
-        if (valid) {
-          validPacks[subject].push(pack);
-        }
+  groups.forEach(g => {
+    selectedSubjects.forEach(s => {
+      let pack = g.classes.filter(c => c.subject === s);
+      if (!pack.length) return;
+      
+      let ok = true;
+      pack.forEach(c => {
+        let pref = document.getElementById(`pref_${s}_${c.type}`)?.value || 'Any';
+        if (pref !== 'Any' && pref !== c.name) ok = false;
       });
-    }
+      if (ok) options[s].push({pack: pack, group: g.name});
+    });
   });
   
-  // Check if any subject has no valid packs
-  const subjectsWithNoPacks = [];
-  for (let subject in validPacks) {
-    if (validPacks[subject].length === 0) {
-      subjectsWithNoPacks.push(subject);
+  // Check if any subject has no options
+  const subjectsWithNoOptions = [];
+  for (let subject in options) {
+    if (options[subject].length === 0) {
+      subjectsWithNoOptions.push(subject);
     }
   }
   
-  if (subjectsWithNoPacks.length > 0) {
-    filterStatus.innerHTML = `<span style="color:#e74c3c;">
-      No valid classes found for "${subjectsWithNoPacks.join(', ')}" based on preferences.
-      Check if your selected doctors and TAs are compatible and from the same group.
-    </span>`;
+  if (subjectsWithNoOptions.length > 0) {
+    alert(`No valid classes found for "${subjectsWithNoOptions.join(', ')}" based on preferences.`);
     return;
   }
   
-  // Generate all possible schedule combinations
   allSchedules = [];
-  let subjectList = Object.keys(validPacks);
+  let subjectList = Object.keys(options);
   
-  function backtrack(index, currentSchedule, usedGroups) {
+  function backtrack(index, current, groupsUsed) {
     if (index === subjectList.length) {
-      allSchedules.push(currentSchedule.flat());
+      const scheduleClasses = current.flat().map(cls => ({
+        ...cls,
+        groupName: cls.groupName || groupsUsed.find(g => current.flat().some(c => 
+          c.subject === cls.subject && c.type === cls.type && c.day === cls.day && c.timeSlot === cls.timeSlot
+        ))
+      }));
+      
+      allSchedules.push({
+        classes: scheduleClasses,
+        groups: [...new Set(groupsUsed)],
+        daysCount: calculateDaysCount(scheduleClasses),
+        gaps: calculateGaps(scheduleClasses)
+      });
       return;
     }
     
     const subject = subjectList[index];
-    for (let pack of validPacks[subject]) {
+    for (let option of options[subject]) {
       let valid = true;
       
-      // Check for time conflicts with existing schedule
-      for (let newClass of pack.classes) {
-        for (let existingClass of currentSchedule.flat()) {
+      // Check for time conflicts
+      for (let newClass of option.pack) {
+        for (let existingClass of current.flat()) {
           if (clash(newClass, existingClass)) {
             valid = false;
             break;
@@ -1536,98 +1482,26 @@ function generateSchedules() {
       }
       
       if (valid) {
-        backtrack(index + 1, [...currentSchedule, pack.classes], [...usedGroups, pack.group]);
+        // Add group name to each class in the pack
+        const packWithGroup = option.pack.map(cls => ({
+          ...cls,
+          groupName: option.group
+        }));
+        
+        backtrack(index + 1, [...current, packWithGroup], [...groupsUsed, option.group]);
       }
     }
   }
   
   backtrack(0, [], []);
   
-  // Apply filters based on mode
-  let filteredSchedules = [...allSchedules];
-  
-  if (mode === 'early') {
-    // Filter: all classes must end by 4:30 PM (16:30 = 16.5 * 60 = 990 minutes)
-    filteredSchedules = allSchedules.filter(schedule => {
-      return schedule.every(cls => cls.end <= 16.5 * 60);
-    });
-    
-    if (filteredSchedules.length === 0) {
-      filterStatus.innerHTML = `
-        <span style="color:#e74c3c;">
-          No schedules found where all classes end by 4:30 PM.
-        </span>
-        <br>
-        <span style="color:#3498db;">
-          Found ${allSchedules.length} total schedules. Try another mode.
-        </span>
-      `;
-    } else {
-      filterStatus.innerHTML = `Found ${filteredSchedules.length} schedules where all classes end by 4:30 PM`;
-    }
-  } else if (mode === 'optimized') {
-    // Sort by custom criteria and take top 10
-    const sortedSchedules = sortSchedulesByCustomCriteria(allSchedules);
-    filteredSchedules = sortedSchedules.slice(0, 10);
-    filterStatus.innerHTML = `Showing top 10 optimized schedules (sorted by: 1) Least gaps, 2) Least days, 3) Earliest finish)`;
-  } else if (mode === 'sorted') {
-    // Sort all schedules by custom criteria
-    filteredSchedules = sortSchedulesByCustomCriteria(allSchedules);
-    filterStatus.innerHTML = `Showing all ${filteredSchedules.length} schedules sorted by: 1) Least gaps, 2) Least days, 3) Earliest finish`;
-  } else {
-    // 'all' mode - show all schedules without sorting
-    filterStatus.innerHTML = `Found ${allSchedules.length} possible schedules`;
-  }
-  
-  if (filteredSchedules.length === 0) {
-    filterStatus.innerHTML += `<br><span style="color:#e74c3c;">
-      No schedules found with current filters. Try adjusting preferences or filters.
-    </span>`;
-  }
-  
-  displayAllSchedules(filteredSchedules, mode);
+  // Filter and display schedules based on selected options
+  displaySelectedSchedules(optionMinDays, optionMinGaps, optionBalanced, optionAll);
 }
 
-function sortSchedulesByCustomCriteria(schedules) {
-  // Calculate scores for each schedule
-  const schedulesWithScores = schedules.map(schedule => {
-    const score = calculateScheduleScore(schedule);
-    return {
-      schedule,
-      score,
-      sortKey: [
-        score.totalGaps,          // Primary: Least gaps
-        score.daysCount,          // Secondary: Least days
-        score.maxEndTime          // Tertiary: Earliest finish
-      ]
-    };
-  });
-  
-  // Sort by custom criteria
-  schedulesWithScores.sort((a, b) => {
-    // Compare total gaps
-    if (a.sortKey[0] !== b.sortKey[0]) {
-      return a.sortKey[0] - b.sortKey[0]; // Lower gaps first
-    }
-    
-    // If gaps are equal, compare days count
-    if (a.sortKey[1] !== b.sortKey[1]) {
-      return a.sortKey[1] - b.sortKey[1]; // Fewer days first
-    }
-    
-    // If days are equal, compare end time
-    return a.sortKey[2] - b.sortKey[2]; // Earlier finish first
-  });
-  
-  // Return just the sorted schedules
-  return schedulesWithScores.map(item => item.schedule);
-}
-
-function displayAllSchedules(schedules, mode) {
-  const scheduleResults = document.getElementById('scheduleResults');
-  
-  if (!schedules.length) {
-    scheduleResults.innerHTML = `
+function displaySelectedSchedules(minDays, minGaps, balanced, all) {
+  if (allSchedules.length === 0) {
+    document.getElementById('scheduleResults').innerHTML = `
       <div class="box" style="text-align:center; padding:30px;">
         <h3 style="color:#e74c3c;">No Valid Schedules Found</h3>
         <p>Try adjusting your preferences or adding more classes to groups.</p>
@@ -1636,79 +1510,197 @@ function displayAllSchedules(schedules, mode) {
     return;
   }
   
-  scheduleResults.innerHTML = '';
+  let filteredSchedules = [];
+  let selectedOptions = [];
   
-  // Add mode-specific header
-  const header = document.createElement('div');
-  header.className = 'box';
-  header.style.textAlign = 'center';
-  
-  if (mode === 'early') {
-    header.innerHTML = `
-      <h3 style="color:#27ae60;">${schedules.length} Schedules Ending by 4:30 PM</h3>
-      <p>All classes in these schedules end by 4:30 PM.</p>
-    `;
-  } else if (mode === 'optimized') {
-    header.innerHTML = `
-      <h3 style="color:#27ae60;">Top ${schedules.length} Optimized Schedules</h3>
-      <p>Sorted by: <strong>1) Least gaps</strong> → <strong>2) Least days</strong> → <strong>3) Earliest finish</strong></p>
-    `;
-  } else if (mode === 'sorted') {
-    header.innerHTML = `
-      <h3 style="color:#27ae60;">${schedules.length} Smart Sorted Schedules</h3>
-      <p>All schedules sorted by: <strong>1) Least gaps</strong> → <strong>2) Least days</strong> → <strong>3) Earliest finish</strong></p>
-      <p style="font-size:14px; color:#7f8c8d;">Schedule 1 has the least gaps, fewest days, and earliest finish.</p>
-    `;
-  } else {
-    header.innerHTML = `
-      <h3 style="color:#27ae60;">${schedules.length} Possible Schedules</h3>
-      <p>Showing all valid schedule combinations in no particular order.</p>
-    `;
+  // Apply filters based on selected options
+  if (minDays) {
+    // Find minimum days
+    const minDaysValue = Math.min(...allSchedules.map(s => s.daysCount));
+    const minDaysSchedules = allSchedules.filter(s => s.daysCount === minDaysValue);
+    
+    if (minDaysSchedules.length > 0) {
+      filteredSchedules = filteredSchedules.concat(minDaysSchedules);
+      selectedOptions.push({
+        title: "Minimum Days Schedule",
+        description: `Schedules with only ${minDaysValue} days at university`,
+        color: "#27ae60",
+        schedules: minDaysSchedules
+      });
+    }
   }
   
-  scheduleResults.appendChild(header);
+  if (minGaps) {
+    // Find minimum gaps
+    const minGapsValue = Math.min(...allSchedules.map(s => s.gaps));
+    const minGapsSchedules = allSchedules.filter(s => s.gaps === minGapsValue);
+    
+    if (minGapsSchedules.length > 0) {
+      // Only add if not already included
+      const newSchedules = minGapsSchedules.filter(s => 
+        !filteredSchedules.some(fs => JSON.stringify(fs.classes) === JSON.stringify(s.classes))
+      );
+      filteredSchedules = filteredSchedules.concat(newSchedules);
+      selectedOptions.push({
+        title: "Minimal Gaps Schedule",
+        description: `Schedules with minimal gaps between classes (${minGapsValue} minutes total)`,
+        color: "#e67e22",
+        schedules: newSchedules
+      });
+    }
+  }
+  
+  if (balanced) {
+    // Calculate balanced scores
+    const maxDays = Math.max(...allSchedules.map(s => s.daysCount));
+    const maxGaps = Math.max(...allSchedules.map(s => s.gaps));
+    
+    allSchedules.forEach(schedule => {
+      schedule.balancedScore = calculateBalancedScore(schedule.classes, maxDays, maxGaps);
+    });
+    
+    // Find best balanced schedules (top 3)
+    const balancedSchedules = [...allSchedules]
+      .sort((a, b) => b.balancedScore - a.balancedScore)
+      .slice(0, 3);
+    
+    if (balancedSchedules.length > 0) {
+      // Only add if not already included
+      const newSchedules = balancedSchedules.filter(s => 
+        !filteredSchedules.some(fs => JSON.stringify(fs.classes) === JSON.stringify(s.classes))
+      );
+      filteredSchedules = filteredSchedules.concat(newSchedules);
+      selectedOptions.push({
+        title: "Balanced Schedule",
+        description: "Best balance between minimum days and minimal gaps",
+        color: "#9b59b6",
+        schedules: newSchedules
+      });
+    }
+  }
+  
+  if (all) {
+    // Show all schedules
+    const allSchedulesFiltered = allSchedules.filter(s => 
+      !filteredSchedules.some(fs => JSON.stringify(fs.classes) === JSON.stringify(s.classes))
+    );
+    filteredSchedules = filteredSchedules.concat(allSchedulesFiltered);
+    selectedOptions.push({
+      title: "All Possible Schedules",
+      description: `All ${allSchedulesFiltered.length} valid schedule combinations`,
+      color: "#3498db",
+      schedules: allSchedulesFiltered
+    });
+  }
+  
+  // Remove duplicates
+  const uniqueSchedules = [];
+  const seen = new Set();
+  
+  filteredSchedules.forEach(schedule => {
+    const key = JSON.stringify(schedule.classes.map(c => ({
+      subject: c.subject,
+      type: c.type,
+      day: c.day,
+      timeSlot: c.timeSlot,
+      group: c.groupName
+    })).sort());
+    
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueSchedules.push(schedule);
+    }
+  });
+  
+  // Display the schedules
+  displaySchedules(uniqueSchedules, selectedOptions);
+}
+
+function displaySchedules(schedules, selectedOptions) {
+  const scheduleResults = document.getElementById('scheduleResults');
+  scheduleResults.innerHTML = '';
+  
+  if (schedules.length === 0) {
+    scheduleResults.innerHTML = `
+      <div class="box" style="text-align:center; padding:30px;">
+        <h3 style="color:#e74c3c;">No Schedules Match Your Criteria</h3>
+        <p>Try selecting different generation options or adjusting your preferences.</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Show summary of selected options
+  const summary = document.createElement('div');
+  summary.className = 'box';
+  summary.style.background = 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)';
+  
+  let summaryHTML = `<h3 style="margin-top: 0; color: #2c3e50;">📊 Schedule Generation Results</h3>`;
+  
+  selectedOptions.forEach(option => {
+    if (option.schedules.length > 0) {
+      summaryHTML += `
+        <div style="margin: 15px 0; padding: 10px; background: white; border-radius: 5px; border-left: 4px solid ${option.color};">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h4 style="margin: 0; color: ${option.color};">${option.title}</h4>
+            <span style="background: ${option.color}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">
+              ${option.schedules.length} schedule${option.schedules.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 14px;">${option.description}</p>
+        </div>
+      `;
+    }
+  });
+  
+  summaryHTML += `<p style="margin-top: 15px; color: #2c3e50; font-weight: 600;">Total: ${schedules.length} unique schedule${schedules.length !== 1 ? 's' : ''} found</p>`;
+  summary.innerHTML = summaryHTML;
+  scheduleResults.appendChild(summary);
   
   // Display each schedule
-  schedules.forEach((schedule, index) => {
+  let scheduleCounter = 0;
+  
+  schedules.forEach((scheduleData, index) => {
+    const schedule = scheduleData.classes;
     const scheduleDiv = document.createElement('div');
     scheduleDiv.className = 'result-schedule';
     scheduleDiv.id = `schedule-${index}`;
     
-    // Calculate schedule metrics
-    const metrics = calculateScheduleScore(schedule);
-    const uniqueGroups = [...new Set(schedule.map(c => c.groupName))];
+    // Determine which option this schedule belongs to
+    let optionType = "Custom";
+    let optionColor = "#7f8c8d";
+    
+    for (const option of selectedOptions) {
+      if (option.schedules.some(s => JSON.stringify(s.classes) === JSON.stringify(schedule))) {
+        optionType = option.title;
+        optionColor = option.color;
+        break;
+      }
+    }
+    
+    // Count classes without instructors
     const classesWithoutInstructors = schedule.filter(c => !c.name || c.name.trim() === '').length;
     
     const scheduleTitle = document.createElement('h3');
     scheduleTitle.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: space-between;">
-        <span>
-          Schedule Option ${index + 1} 
-          <span style="font-size:14px; color:#7f8c8d; font-weight:normal;">
-            (${schedule.length} classes from ${uniqueGroups.length} group${uniqueGroups.length !== 1 ? 's' : ''})
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+        <div>
+          <span style="color: ${optionColor};">${optionType}</span> - Schedule ${++scheduleCounter}
+          <span style="font-size: 12px; color: #7f8c8d; margin-left: 10px;">
+            📅 ${scheduleData.daysCount} days | ⏰ ${scheduleData.gaps} min gaps
           </span>
-        </span>
-        <span style="font-size:12px; color:#3498db; background:#e8f4fc; padding:3px 8px; border-radius:4px;">
-          Rank ${index + 1}
-        </span>
+        </div>
+        <div style="display: flex; gap: 10px; font-size: 12px;">
+          <span style="background: #ecf0f1; padding: 2px 8px; border-radius: 10px;">
+            ${schedule.length} classes
+          </span>
+          ${classesWithoutInstructors > 0 ? 
+            `<span style="background: #fdebd0; padding: 2px 8px; border-radius: 10px; color: #e67e22;">
+              ${classesWithoutInstructors} without instructor
+            </span>` : ''
+          }
+        </div>
       </div>
-      <div style="font-size:14px; color:#7f8c8d; margin-top:5px;">
-        <span style="display:inline-block; margin-right:15px;">
-          📅 <strong>${metrics.daysCount}</strong> days/week
-        </span>
-        <span style="display:inline-block; margin-right:15px;">
-          ⏱️ <strong>${metrics.formattedGaps}</strong> total gaps
-        </span>
-        <span style="display:inline-block;">
-          🕒 Latest class: <strong>${metrics.formattedEndTime}</strong>
-        </span>
-      </div>
-      ${classesWithoutInstructors > 0 ? 
-        `<div style="color:#e74c3c; font-size:13px; margin-top:5px;">
-          ⚠️ ${classesWithoutInstructors} class${classesWithoutInstructors !== 1 ? 'es' : ''} without instructor
-        </div>` : 
-        ''
-      }
     `;
     scheduleDiv.appendChild(scheduleTitle);
     
@@ -1749,12 +1741,14 @@ function displayAllSchedules(schedules, mode) {
     days.forEach(day => {
       const row = document.createElement('tr');
       
+      // Day cell - first column
       const dayCell = document.createElement('td');
       dayCell.className = 'day-header';
       dayCell.textContent = day;
       dayCell.style.fontWeight = '600';
       row.appendChild(dayCell);
       
+      // Cells for each lecture slot
       for (let i = 0; i < 6; i++) {
         const cell = document.createElement('td');
         cell.className = 'empty-cell';
@@ -1807,16 +1801,6 @@ window.onclick = function(event) {
     }
   });
 }
-
-// Add mode selection styling
-document.querySelectorAll('.mode-option').forEach(option => {
-  option.addEventListener('click', function() {
-    document.querySelectorAll('.mode-option').forEach(opt => {
-      opt.classList.remove('selected');
-    });
-    this.classList.add('selected');
-  });
-});
 
 // Load data from browser when page loads
 window.addEventListener('load', () => {
